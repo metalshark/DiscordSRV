@@ -493,12 +493,17 @@ public class DiscordSRV extends JavaPlugin implements Listener {
             DiscordSRV.error("Failed to make custom DNS client: " + e.getMessage());
         }
 
-        OkHttpClient httpClient = new OkHttpClient.Builder()
+        final WebSocketFactory webSocketFactory = new WebSocketFactory()
+                .setDualStackMode(DualStackMode.IPV4_ONLY);
+
+        final OkHttpClient httpClient = new OkHttpClient.Builder()
                 .dns(dns)
                 // more lenient timeouts (normally 10 seconds for these 3)
                 .connectTimeout(20, TimeUnit.SECONDS)
                 .readTimeout(20, TimeUnit.SECONDS)
                 .writeTimeout(20, TimeUnit.SECONDS)
+                .socketFactory(webSocketFactory.getSocketFactory())
+                .sslSocketFactory(webSocketFactory.getSSLSocketFactory())
                 .build();
 
         // set custom RestAction failure handler
@@ -570,9 +575,7 @@ public class DiscordSRV extends JavaPlugin implements Listener {
 //                            GatewayIntent.DIRECT_MESSAGES
 //                    ))
 //                    .disableCache(Arrays.stream(CacheFlag.values()).filter(cacheFlag -> cacheFlag != CacheFlag.MEMBER_OVERRIDES && cacheFlag != CacheFlag.VOICE_STATE).collect(Collectors.toList()))
-                    .setWebsocketFactory(new WebSocketFactory()
-                            .setDualStackMode(DualStackMode.IPV4_ONLY)
-                    )
+                    .setWebsocketFactory(webSocketFactory)
                     .setHttpClient(httpClient)
                     .setAutoReconnect(true)
                     .setBulkDeleteSplittingEnabled(false)
